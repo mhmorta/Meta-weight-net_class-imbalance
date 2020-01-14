@@ -67,7 +67,7 @@ classe_labels = range(args.num_classes)
 data_list = {}
 
 for j in range(args.num_classes):
-    data_list[j] = [i for i, label in enumerate(train_loader.dataset.train_labels) if label == j]
+    data_list[j] = [i for i, label in enumerate(train_loader.dataset.targets) if label == j]
 
 img_num_list = get_img_num_per_cls(args.dataset,args.imb_factor,args.num_meta*args.num_classes)
 print(img_num_list)
@@ -132,6 +132,29 @@ def main():
 
     print('Best accuracy: ', best_prec1)
 
+    x = np.arange(0.00, 20.00, 0.1)
+    cost_v = torch.tensor(x).float().view(-1, 1).cuda()
+    v_lambda = vnet(cost_v)
+    norm_c = torch.sum(v_lambda)
+
+    if norm_c != 0:
+        v_lambda_norm = v_lambda / norm_c
+    else:
+        v_lambda_norm = v_lambda
+
+    l_f_meta_array_norm = cost_v * v_lambda_norm
+    l_f_meta_array = cost_v * v_lambda
+
+    fig, ax = plt.subplots()
+    ax.plot(x, l_f_meta_array.cpu().detach().numpy())
+    ax.plot(x, x)
+
+    ax.set(xlabel='loss', ylabel='value')
+    ax.grid()
+
+    address = "Results/vnet/task.png"
+    fig.savefig(address)
+
 
 def train(train_loader, validation_loader,model, vnet,optimizer_a,optimizer_c,epoch):
     """Train for one epoch on the training set"""
@@ -153,7 +176,7 @@ def train(train_loader, validation_loader,model, vnet,optimizer_a,optimizer_c,ep
         meta_model.load_state_dict(model.state_dict())
 
         y_f_hat = meta_model(input_var)
-        cost = F.cross_entropy(y_f_hat, target_var, reduce=False)
+        cost = F.cross_entropy(y_f_hat, target_var, reduction='none')
         cost_v = torch.reshape(cost, (len(cost), 1))
 
         v_lambda = vnet(cost_v)
@@ -186,7 +209,7 @@ def train(train_loader, validation_loader,model, vnet,optimizer_a,optimizer_c,ep
         optimizer_c.step()
 
         y_f = model(input_var)
-        cost_w = F.cross_entropy(y_f, target_var, reduce=False)
+        cost_w = F.cross_entropy(y_f, target_var, reduction='none')
         cost_v = torch.reshape(cost_w, (len(cost_w), 1))
         prec_train = accuracy(y_f.data, target_var.data, topk=(1,))[0]
 
@@ -231,7 +254,7 @@ def validate(val_loader, model, criterion, epoch):
 
     end = time.time()
     for i, (input, target) in enumerate(val_loader):
-        target = target.cuda(async=True)
+        target = target.cuda()
         input = input.cuda()
         input_var = torch.autograd.Variable(input)
         target_var = torch.autograd.Variable(target)

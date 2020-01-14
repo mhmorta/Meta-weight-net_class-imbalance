@@ -194,7 +194,7 @@ def _weights_init(m):
     classname = m.__class__.__name__
     # print(classname)
     if isinstance(m, MetaLinear) or isinstance(m, MetaConv2d):
-        init.kaiming_normal(m.weight)
+        init.kaiming_normal_(m.weight)
 
 class LambdaLayer(MetaModule):
     def __init__(self, lambd):
@@ -286,7 +286,7 @@ class VNet(MetaModule):
         # x = self.linear2(x)
         # x = self.relu1(x)
         out = self.linear2(x)
-        return F.sigmoid(out)
+        return torch.sigmoid(out)
 
 
 
