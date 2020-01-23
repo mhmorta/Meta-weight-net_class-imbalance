@@ -15,9 +15,26 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import torchvision.transforms as transforms
 from torch.utils.data.sampler import SubsetRandomSampler
+from torchsummary import summary
 import matplotlib.pyplot as plt
 from data_utils import *
 from resnet import *
+
+def plot_vnet(weight_list, name=None):
+    fig, ax = plt.subplots()
+    x = np.arange(0.00, 10.00, 0.1)
+
+    fig, ax = plt.subplots()
+    for id, weight in enumerate(weight_list, 1):
+        ax.plot(x, weight, label='Task {:d}'.format(id))
+
+    plt.legend(loc='best')
+
+    ax.set(xlabel='loss', ylabel='weights')
+    ax.grid()
+
+    address = "weights.png" if name is None else "{}.png".format(name)
+    fig.savefig(address)
 
 # parse arguments
 parser = argparse.ArgumentParser(description='Imbalanced Example')
@@ -107,7 +124,13 @@ def main():
                                   momentum=args.momentum, nesterov=args.nesterov,
                                   weight_decay=args.weight_decay)
 
+    summary(model, (3, 32, 32))
+
     vnet = VNet(1, 100, 1).cuda()
+
+    weight = [vnet.loss_weights()]
+
+    plot_vnet(weight, name="vnet_start")
 
     optimizer_c = torch.optim.SGD(vnet.params(), 1e-5,
                                   momentum=args.momentum, nesterov=args.nesterov,
@@ -240,7 +263,7 @@ def train(train_loader, validation_loader,model, vnet,optimizer_a,optimizer_c,ep
                   'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                   'meta_Prec@1 {meta_top1.val:.3f} ({meta_top1.avg:.3f})'.format(
                 epoch, i, len(train_loader),
-                loss=losses,meta_loss=meta_losses, top1=top1,meta_top1=meta_top1))
+                loss=losses, meta_loss=meta_losses, top1=top1, meta_top1=meta_top1))
 
 
 def validate(val_loader, model, criterion, epoch):

@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import math
 from torch.autograd import Variable
 import torch.nn.init as init
+import numpy as np
 
 
 def to_var(x, requires_grad=True):
@@ -287,6 +288,12 @@ class VNet(MetaModule):
         # x = self.relu1(x)
         out = self.linear2(x)
         return torch.sigmoid(out)
+
+    def loss_weights(self):
+        x = np.arange(0.00, 10.00, 0.1)
+        x = torch.tensor(x).float().view(-1, 1).cuda()
+        cost_v = self(x).cpu().detach()
+        return cost_v
 
 
 
