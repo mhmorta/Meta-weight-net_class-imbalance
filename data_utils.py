@@ -45,7 +45,7 @@ def build_dataset(dataset,num_meta):
 
     data_list_val = {}
     for j in range(num_classes):
-        data_list_val[j] = [i for i, label in enumerate(train_dataset.classes) if label == j]
+        data_list_val[j] = [i for i, label in enumerate(train_dataset.targets) if label == j]
 
     idx_to_meta = []
     idx_to_train = []
@@ -59,9 +59,9 @@ def build_dataset(dataset,num_meta):
     train_data = copy.deepcopy(train_dataset)
     train_data_meta = copy.deepcopy(train_dataset)
     train_data_meta.train_data = np.delete(train_dataset.data,idx_to_train,axis=0)
-    train_data_meta.train_labels = np.delete(train_dataset.classes, idx_to_train, axis=0)
+    train_data_meta.train_labels = np.delete(train_dataset.targets, idx_to_train, axis=0)
     train_data.train_data = np.delete(train_dataset.data, idx_to_meta, axis=0)
-    train_data.train_labels = np.delete(train_dataset.classes, idx_to_meta, axis=0)
+    train_data.train_labels = np.delete(train_dataset.targets, idx_to_meta, axis=0)
 
     return train_data_meta,train_data,test_dataset
 

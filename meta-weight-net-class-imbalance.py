@@ -66,7 +66,7 @@ parser.add_argument('--print-freq', '-p', default=10, type=int,
 args = parser.parse_args()
 print(args)
 
-kwargs = {'num_workers': 1, 'pin_memory': True}
+kwargs = {'num_workers': 0, 'pin_memory': True}
 use_cuda = not args.no_cuda and torch.cuda.is_available()
 
 torch.manual_seed(args.seed)
@@ -175,7 +175,7 @@ def main():
     ax.set(xlabel='loss', ylabel='value')
     ax.grid()
 
-    address = "Results/vnet/task.png"
+    address = "task.png"
     fig.savefig(address)
 
 
@@ -193,7 +193,9 @@ def train(train_loader, validation_loader,model, vnet,optimizer_a,optimizer_c,ep
         input_var = to_var(input, requires_grad=False)
         target_var = to_var(target, requires_grad=False)
 
-
+        for i in range(10):
+            print(len(np.where(target==i)[0]))
+        print()
         meta_model = build_model()
 
         meta_model.load_state_dict(model.state_dict())
@@ -219,6 +221,7 @@ def train(train_loader, validation_loader,model, vnet,optimizer_a,optimizer_c,ep
         del grads
 
         input_validation, target_validation = next(iter(validation_loader))
+        print(len(validation_loader))
         input_validation_var = to_var(input_validation, requires_grad=False)
         target_validation_var = to_var(target_validation, requires_grad=False)
         y_g_hat = meta_model(input_validation_var)
