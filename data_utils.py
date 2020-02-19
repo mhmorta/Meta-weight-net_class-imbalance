@@ -58,10 +58,10 @@ def build_dataset(dataset,num_meta):
         idx_to_train.extend(img_id_list[img_num:])
     train_data = copy.deepcopy(train_dataset)
     train_data_meta = copy.deepcopy(train_dataset)
-    train_data_meta.train_data = np.delete(train_dataset.data,idx_to_train,axis=0)
-    train_data_meta.train_labels = np.delete(train_dataset.targets, idx_to_train, axis=0)
-    train_data.train_data = np.delete(train_dataset.data, idx_to_meta, axis=0)
-    train_data.train_labels = np.delete(train_dataset.targets, idx_to_meta, axis=0)
+    train_data_meta.data = np.delete(train_dataset.data,idx_to_train,axis=0)
+    train_data_meta.targets = np.delete(train_dataset.targets, idx_to_train, axis=0)
+    train_data.data = np.delete(train_dataset.data, idx_to_meta, axis=0)
+    train_data.targets = np.delete(train_dataset.targets, idx_to_meta, axis=0)
 
     return train_data_meta,train_data,test_dataset
 

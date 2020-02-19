@@ -100,8 +100,8 @@ for cls_idx, img_id_list in data_list.items():
 print(len(idx_to_del))
 
 imbalanced_train_dataset = copy.deepcopy(train_data)
-imbalanced_train_dataset.train_labels = np.delete(train_loader.dataset.train_labels, idx_to_del, axis=0)
-imbalanced_train_dataset.train_data = np.delete(train_loader.dataset.train_data, idx_to_del, axis=0)
+imbalanced_train_dataset.targets = np.delete(train_loader.dataset.targets, idx_to_del, axis=0)
+imbalanced_train_dataset.data = np.delete(train_loader.dataset.data, idx_to_del, axis=0)
 imbalanced_train_loader = torch.utils.data.DataLoader(
     imbalanced_train_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
 
@@ -158,21 +158,10 @@ def main():
     x = np.arange(0.00, 20.00, 0.1)
     cost_v = torch.tensor(x).float().view(-1, 1).cuda()
     v_lambda = vnet(cost_v)
-    norm_c = torch.sum(v_lambda)
-
-    if norm_c != 0:
-        v_lambda_norm = v_lambda / norm_c
-    else:
-        v_lambda_norm = v_lambda
-
-    l_f_meta_array_norm = cost_v * v_lambda_norm
-    l_f_meta_array = cost_v * v_lambda
-
     fig, ax = plt.subplots()
-    ax.plot(x, l_f_meta_array.cpu().detach().numpy())
-    ax.plot(x, x)
 
-    ax.set(xlabel='loss', ylabel='value')
+    ax.plot(x, v_lambda.cpu().detach().numpy())
+    ax.set(xlabel='loss', ylabel='weight')
     ax.grid()
 
     address = "task.png"
@@ -193,9 +182,6 @@ def train(train_loader, validation_loader,model, vnet,optimizer_a,optimizer_c,ep
         input_var = to_var(input, requires_grad=False)
         target_var = to_var(target, requires_grad=False)
 
-        for i in range(10):
-            print(len(np.where(target==i)[0]))
-        print()
         meta_model = build_model()
 
         meta_model.load_state_dict(model.state_dict())
@@ -221,7 +207,6 @@ def train(train_loader, validation_loader,model, vnet,optimizer_a,optimizer_c,ep
         del grads
 
         input_validation, target_validation = next(iter(validation_loader))
-        print(len(validation_loader))
         input_validation_var = to_var(input_validation, requires_grad=False)
         target_validation_var = to_var(target_validation, requires_grad=False)
         y_g_hat = meta_model(input_validation_var)
